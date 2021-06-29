@@ -1,12 +1,13 @@
-import pandas as pd
-import time
+# import pandas as pd
+# import time
+import tkinter.scrolledtext as st
 from tkinter.font import Font
 from sklearn.metrics import classification_report
 import numpy as np
-from sklearn.svm import LinearSVC
-from sklearn.pipeline import Pipeline
-from sklearn.feature_extraction.text import TfidfTransformer
-from sklearn.feature_extraction.text import CountVectorizer
+# from sklearn.svm import LinearSVC
+# from sklearn.pipeline import Pipeline
+# from sklearn.feature_extraction.text import TfidfTransformer
+# from sklearn.feature_extraction.text import CountVectorizer
 
 import pickle
 from sklearn.preprocessing import LabelEncoder
@@ -33,7 +34,15 @@ def text_preprocess(document):
     return document
 
 
+def removeSpecialcharacters(text):
+    text = re.sub(
+        r'[^\s\wáàảãạăắằẳẵặâấầẩẫậéèẻẽẹêếềểễệóòỏõọôốồổỗộơớờởỡợíìỉĩịúùủũụưứừửữựýỳỷỹỵđ_]', ' ', text)
+    # xóa khoảng trắng thừa
+    text = re.sub(r'\s+', ' ', text).strip()
+    return text
+
 ############################## Thống kê các word xuất hiện ở tất cả các nhãn ########################################
+
 
 f = open('news_categories.txt', mode='r', encoding='utf-8')
 # data=f.read(1000000)
@@ -86,12 +95,12 @@ def remove_stopwords(line):
     return ' '.join(words)
 
 
-f = open('news_categories.txt', mode='r', encoding='utf-8')
-# data=f.read(1000000)
-with open('handle_news_categories.txt', 'w', encoding='utf-8') as fp:
-    for line in f:
-        line = remove_stopwords(line)
-        fp.write(line + '\n')
+# f = open('news_categories.txt', mode='r', encoding='utf-8')
+# # data=f.read(1000000)
+# with open('handle_news_categories.txt', 'w', encoding='utf-8') as fp:
+#     for line in f:
+#         line = remove_stopwords(line)
+#         fp.write(line + '\n')
 ############################## Chia tập train/test ########################################
 
 
@@ -114,18 +123,18 @@ label_encoder = LabelEncoder()
 y_train = label_encoder.fit_transform(y_train)
 y_test = label_encoder.fit_transform(y_test)
 ##############################  training with SVM ########################################
-start_time = time.time()
-text_clf = Pipeline([('vect', CountVectorizer(ngram_range=(1, 1), max_df=0.8)),
-                     ('tfidf', TfidfTransformer()),
-                     ('clf', LinearSVC())
-                     ])
+# start_time = time.time()
+# text_clf = Pipeline([('vect', CountVectorizer(ngram_range=(1, 1), max_df=0.8)),
+#                      ('tfidf', TfidfTransformer()),
+#                      ('clf', LinearSVC())
+#                      ])
 
 
-text_clf = text_clf.fit(X_train, y_train)
-train_time = time.time() - start_time
-print('Done training SVM in', train_time, 'seconds.')
-# Save model
-pickle.dump(text_clf, open(os.path.join("svm.pkl"), 'wb'))
+# text_clf = text_clf.fit(X_train, y_train)
+# train_time = time.time() - start_time
+# print('Done training SVM in', train_time, 'seconds.')
+# # Save model
+# pickle.dump(text_clf, open(os.path.join("svm.pkl"), 'wb'))
 
 ##############################  code tkinter ########################################
 
@@ -137,34 +146,59 @@ def openFile():
         filetypes=(("Text Files", "*.txt"),)
     )
     # pathh.insert(END, tf)
-    tf = open(tf, 'r', encoding='utf-8')  # or tf = open(tf, 'r')
-    data = tf.read()
+    dataDemo = open(tf, mode='r', encoding='utf-8')
+    data = dataDemo.read()
     txtarea.insert(END, data)
-    tf.close()
 
-
-def predict():
     SVM_model = pickle.load(open(os.path.join("svm.pkl"), 'rb'))
-    dataDemo = open('article_demo.txt', mode='r', encoding='utf-8')
+    # dataDemo = open(tf, mode='r', encoding='utf-8')
     # print(f.read())
+    dataDemo = open(tf, mode='r', encoding='utf-8')
 
-    with open('handle_article_demo.txt', 'w', encoding='utf-8') as hd:
+    with open('aaa.txt', 'w', encoding='utf-8') as hd:
         for line in dataDemo:
+            text = line
             line = text_preprocess(line)
             line = remove_stopwords(line)
-            hd.write(line + '\n')
-    handle_demo = open('handle_article_demo.txt', mode='r', encoding='utf-8')
-    with open('handle_predict_demo.txt', 'w', encoding='utf-8') as hpd:
-        for line in handle_demo:
             line = SVM_model.predict([line])
             line = label_encoder.inverse_transform(line)
             out_array = np.array_str(line)  # chuyển từ np.ndarray về str
-            hpd.write(out_array + '\n')
+            removed_label = out_array.replace("__label__", "")
+            removed_underlined = removed_label.replace("_", " ")
+            label = removed_underlined.replace("'", " ")  # ...
+            # label = removeSpecialcharacters(removed_underlined)
+            hd.write(label + '\n'+text)
+    dataDemo.close()
+
+
+def predict():
+    # SVM_model = pickle.load(open(os.path.join("svm.pkl"), 'rb'))
+    # dataDemo = open('article_demo.txt', mode='r', encoding='utf-8')
+    # # print(f.read())
+
+    # with open('aaa.txt', 'w', encoding='utf-8') as hd:
+    #     for line in dataDemo:
+    #         text = line
+    #         line = text_preprocess(line)
+    #         line = remove_stopwords(line)
+    #         line = SVM_model.predict([line])
+    #         line = label_encoder.inverse_transform(line)
+    #         out_array = np.array_str(line)  # chuyển từ np.ndarray về str
+    #         removed_label = out_array.replace("__label__", "")
+    #         removed_underlined = removed_label.replace("_", " ")
+    #         label = removed_underlined.replace("'", " ")  # ...
+    #         # label = removeSpecialcharacters(removed_underlined)
+    #         hd.write(label + '\n'+text)
     # or tf = open(tf, 'r')
-    d = open('handle_predict_demo.txt', 'r', encoding='utf-8')
+    d = open('aaa.txt', 'r', encoding='utf-8')
     data = d.read()
     txtPredict.insert(END, data)
     d.close()
+
+
+def clearText():
+    txtarea.delete('1.0', END)
+    txtPredict.delete('1.0', END)
 
 
 root = Tk()
@@ -173,9 +207,12 @@ scrW = root.winfo_screenwidth()
 scrH = root.winfo_screenheight()
 # root.geometry('1000x600+%d+%d' % (scrW/2-500, scrH/2-300))
 root.geometry("%dx%d" % (scrW, scrH))
+
+
 fontSize = tkFont.Font(family='Helvetica', size=20, weight=tkFont.BOLD)
 
-lbl1 = Label(root, text="Phân loại văn bản tiếng Việt",
+
+lbl1 = Label(root, text="Phân loại tin tức điện tử",
              font="None 35 bold")
 lbl1.config(anchor=CENTER)
 lbl1.pack()
@@ -194,17 +231,24 @@ Button(
     text="Predict",
     command=predict,
     font=fontBtn
-).grid(ipadx=58, ipady=10, row=2, column=0, sticky=W, padx=20, pady=20)
+).grid(ipadx=65, ipady=10, row=2, column=0, sticky=W, padx=20, pady=20)
+Button(
+    frame2,
+    text="Clear text",
+    command=clearText,
+    font=fontBtn
+).grid(ipadx=50, ipady=10, row=3, column=0, sticky=W, padx=20, pady=20)
 # Create an Entry Widget in Frame2
 myFont = Font(family="Times New Roman", size=20)
-txtarea = Text(frame2, height=12, width=110)
+txtarea = st.ScrolledText(frame2, height=12, width=110)
 txtarea.grid(row=1, column=1, sticky=W, padx=20, pady=20)
 txtarea.configure(font=myFont)
 
 
-txtPredict = Text(frame2, height=12, width=110)
+txtPredict = st.ScrolledText(frame2, height=12, width=110)
 txtPredict.grid(row=2, column=1, sticky=W, padx=20, pady=20)
 txtPredict.configure(font=myFont)
+
 frame2.pack()
 
 
